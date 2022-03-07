@@ -1,7 +1,7 @@
 package com.form.security.config;
 
 import com.form.security.service.UserService;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,40 +15,46 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    private UserService service;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    private final UserService service;
-
     @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/css/**","/img/**","/js/**");
+    public void configure(WebSecurity web) throws Exception
+    {
+        // static 디렉터리의 하위 파일 목록은 인증 무시 ( = 항상통과 )
+        web.ignoring().antMatchers("/css/**", "/js/**", "/img/**", "/lib/**");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/user/info/**").hasRole("USER")
-                .antMatchers("/user/info/**").hasRole("ADMIN")
+                // 페이지 권한 설정
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/user/info/**").hasRole("MEMBER")
                 .antMatchers("/**").permitAll()
-                .and()
+                .and() // 로그인 설정
                 .formLogin()
-                .loginPage("/user/login")
+                .loginPage("/member/login")
                 .defaultSuccessUrl("/")
-                .and()
+                .permitAll()
+                .and() // 로그아웃 설정
                 .logout()
-                .logoutUrl("/user/info/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/user/info/logout"))
                 .logoutSuccessUrl("/")
-                .permitAll();
+                .invalidateHttpSession(true)
+                .and()
+                // 403 예외처리 핸들링
+                .exceptionHandling().accessDeniedPage("/user/denied");
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(service).passwordEncoder(passwordEncoder());
     }
 }

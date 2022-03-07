@@ -1,40 +1,76 @@
 package com.form.security.controller;
 
+import com.form.security.dto.UserDto;
+import com.form.security.service.UserService;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
+@RequiredArgsConstructor
 public class MainController {
 
-    public String main() {
-        return "index";
-    }
+    @Controller
+    @AllArgsConstructor
+    public class MemberController {
+        private UserService service;
 
-    @RequestMapping("/member/regist")
-    public String join() {
-        return "user/regist";
-    }
+        // 메인 페이지
+        @GetMapping("/")
+        public String index() {
+            return "/index";
+        }
 
-    @RequestMapping("member/login")
-    public String login() {
-        return "user/login";
-    }
+        // 회원가입 페이지
+        @GetMapping("/member/regist")
+        public String dispSignup() {
+            return "/user/regist";
+        }
 
-    @RequestMapping("user/info/{id}")
-    public String info(@PathVariable Long id) {
-        return "user/info";
-    }
+        // 회원가입 처리
+        @PostMapping("/member/regist")
+        public String execSignup(UserDto dto) {
+            service.join(dto);
 
-    @RequestMapping("user/info/edit/{id}")
-    public String update(@PathVariable Long id) {
-        return "user/edit";
-    }
+            return "redirect:/member/login";
+        }
 
-    @RequestMapping("user/info/delete/{id}")
-    public String delete(@PathVariable Long id) {
-        return "user/delete";
+        // 로그인 페이지
+        @GetMapping("/member/login")
+        public String dispLogin() {
+            return "user/login";
+        }
+
+        // 로그인 결과 페이지
+//        @GetMapping("/user/login/result")
+//        public String dispLoginResult() {
+//            return "/loginSuccess";
+//        }
+
+        // 로그아웃 결과 페이지
+//        @GetMapping("/user/logout/result")
+//        public String dispLogout() {
+//            return "/logout";
+//        }
+
+        // 접근 거부 페이지
+        @GetMapping("/user/denied")
+        public String dispDenied() {
+            return "/denied";
+        }
+
+        // 내 정보 페이지
+        @GetMapping("/user/info")
+        public String dispMyInfo() {
+            return "user/info";
+        }
+
+        // 어드민 페이지
+        @GetMapping("/admin")
+        public String dispAdmin() {
+            return "/admin";
+        }
     }
 
 }
